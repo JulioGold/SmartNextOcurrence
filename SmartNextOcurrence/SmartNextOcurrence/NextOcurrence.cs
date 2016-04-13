@@ -220,8 +220,6 @@ namespace SmartNextOcurrence
 
         internal void SelectPreviousCharacter()
         {
-            // TODO: Implement the behavior here
-
             _view.Selection.Clear();
             _view.Caret.IsHidden = true;
 
@@ -230,19 +228,20 @@ namespace SmartNextOcurrence
             {
                 ITrackingPoint item = _trackPointList[i];
 
-            //    WordPosition previousWord = WordPosition.PreviousWord(_view.TextViewLines.FormattedSpan.GetText(), item.GetPosition(_view.TextSnapshot));
+                int start = (item.GetPosition(_view.TextSnapshot) == 0) ? 0 : (item.GetPosition(_view.TextSnapshot) - 1);
+                int end = item.GetPosition(_view.TextSnapshot);
 
-            //    _selectedTrackPointList.Add(
-            //        new Tuple<ITrackingPoint, ITrackingPoint>
-            //        (
-            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, previousWord.Start), PointTrackingMode.Positive),
-            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, previousWord.End), PointTrackingMode.Positive)
-            //        )
-            //    );
+                _selectedTrackPointList.Add(
+                    new Tuple<ITrackingPoint, ITrackingPoint>
+                    (
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, start), PointTrackingMode.Positive),
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, end), PointTrackingMode.Positive)
+                    )
+                );
 
-            //    int newCursorPosition = ((_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) >= 0) && (previousWord.Word.Length > 0) ? (_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) : 0;
+                int newCursorPosition = (_trackPointList[i].GetPosition(_view.TextSnapshot) == 0) ? 0 : (_trackPointList[i].GetPosition(_view.TextSnapshot) - 1);
 
-            //    _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
+                _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
             }
 
             Selecting = true;
@@ -265,21 +264,21 @@ namespace SmartNextOcurrence
             {
                 ITrackingPoint item = _trackPointList[i];
 
-            //    WordPosition nextWord = WordPosition.NextWord(_view.TextViewLines.FormattedSpan.GetText(), item.GetPosition(_view.TextSnapshot));
+                int textLength = _view.TextViewLines.FormattedSpan.GetText().Length;
+                int start = item.GetPosition(_view.TextSnapshot); 
+                int end = ((item.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (item.GetPosition(_view.TextSnapshot) + 1);
 
-            //    _selectedTrackPointList.Add(
-            //        new Tuple<ITrackingPoint, ITrackingPoint>
-            //        (
-            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, nextWord.Start), PointTrackingMode.Positive),
-            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, nextWord.End), PointTrackingMode.Positive)
-            //        )
-            //    );
+                _selectedTrackPointList.Add(
+                    new Tuple<ITrackingPoint, ITrackingPoint>
+                    (
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, start), PointTrackingMode.Positive),
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, end), PointTrackingMode.Positive)
+                    )
+                );
 
-            //    int newCursorPosition = ((_trackPointList[i].GetPosition(_view.TextSnapshot) + nextWord.Word.Length) < _view.TextViewLines.FormattedSpan.GetText().Length) && (nextWord.Word.Length > 0) ?
-            //        (_trackPointList[i].GetPosition(_view.TextSnapshot) + nextWord.Word.Length) :
-            //        _view.TextViewLines.FormattedSpan.GetText().Length - 1;
+                int newCursorPosition = ((item.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (item.GetPosition(_view.TextSnapshot) + 1);
 
-            //    _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
+                _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
             }
 
             Selecting = true;
