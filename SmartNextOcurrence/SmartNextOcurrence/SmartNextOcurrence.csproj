@@ -50,6 +50,7 @@
     <Compile Include="NextOcurrenceMouseProcessorProvider.cs" />
     <Compile Include="NextOcurrenceTextViewCreationListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WordPosition.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
