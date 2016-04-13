@@ -218,6 +218,78 @@ namespace SmartNextOcurrence
             }
         }
 
+        internal void SelectPreviousCharacter()
+        {
+            // TODO: Implement the behavior here
+
+            _view.Selection.Clear();
+            _view.Caret.IsHidden = true;
+
+            // Faz com que o "cursor" vá para o início da palavra, pois aqui é SelectPreviousWord, ou seja a palavra anterior
+            for (int i = 0; i < _trackPointList.Count; i++)
+            {
+                ITrackingPoint item = _trackPointList[i];
+
+            //    WordPosition previousWord = WordPosition.PreviousWord(_view.TextViewLines.FormattedSpan.GetText(), item.GetPosition(_view.TextSnapshot));
+
+            //    _selectedTrackPointList.Add(
+            //        new Tuple<ITrackingPoint, ITrackingPoint>
+            //        (
+            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, previousWord.Start), PointTrackingMode.Positive),
+            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, previousWord.End), PointTrackingMode.Positive)
+            //        )
+            //    );
+
+            //    int newCursorPosition = ((_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) >= 0) && (previousWord.Word.Length > 0) ? (_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) : 0;
+
+            //    _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
+            }
+
+            Selecting = true;
+
+            RedrawScreen();
+
+            // Diz que está editando
+            Editing = true;
+        }
+
+        internal void SelectNextCharacter()
+        {
+            // TODO: Implement the behavior here
+
+            _view.Selection.Clear();
+            _view.Caret.IsHidden = true;
+
+            //// Faz com que o "cursor" vá para o início da palavra, pois aqui é SelectPreviousWord, ou seja a palavra anterior
+            for (int i = 0; i < _trackPointList.Count; i++)
+            {
+                ITrackingPoint item = _trackPointList[i];
+
+            //    WordPosition nextWord = WordPosition.NextWord(_view.TextViewLines.FormattedSpan.GetText(), item.GetPosition(_view.TextSnapshot));
+
+            //    _selectedTrackPointList.Add(
+            //        new Tuple<ITrackingPoint, ITrackingPoint>
+            //        (
+            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, nextWord.Start), PointTrackingMode.Positive),
+            //            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, nextWord.End), PointTrackingMode.Positive)
+            //        )
+            //    );
+
+            //    int newCursorPosition = ((_trackPointList[i].GetPosition(_view.TextSnapshot) + nextWord.Word.Length) < _view.TextViewLines.FormattedSpan.GetText().Length) && (nextWord.Word.Length > 0) ?
+            //        (_trackPointList[i].GetPosition(_view.TextSnapshot) + nextWord.Word.Length) :
+            //        _view.TextViewLines.FormattedSpan.GetText().Length - 1;
+
+            //    _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
+            }
+
+            Selecting = true;
+
+            RedrawScreen();
+
+            // Diz que está editando
+            Editing = true;
+        }
+
         internal void SelectPreviousWord()
         {
             _view.Selection.Clear();
@@ -256,7 +328,7 @@ namespace SmartNextOcurrence
             _view.Selection.Clear();
             _view.Caret.IsHidden = true;
 
-            // Faz com que o "cursor" vá para o início da palavra, pois aqui é SelectPreviousWord, ou seja a palavra anterior
+            // Faz com que o "cursor" vá para o final da palavra, pois aqui é SelectNextWord, ou seja a próxima palavra
             for (int i = 0; i < _trackPointList.Count; i++)
             {
                 ITrackingPoint item = _trackPointList[i];
@@ -316,6 +388,7 @@ namespace SmartNextOcurrence
                         case ((uint)VSConstants.VSStd97CmdID.Delete):
                         case ((uint)VSConstants.VSStd2KCmdID.RETURN):
                         case ((uint)VSConstants.VSStd2KCmdID.BACKTAB):
+                        case ((uint)VSConstants.VSStd97CmdID.Paste): /* Ctrl+V */
 
                             DeleteSelection();
 
@@ -332,7 +405,9 @@ namespace SmartNextOcurrence
                 _view.Selection.Clear();
 
                 ITextCaret caret = _view.Caret;
-                var tempTrackList = _trackPointList;
+
+                List<ITrackingPoint> tempTrackList = _trackPointList;
+
                 _trackPointList = new List<ITrackingPoint>();
 
                 SnapshotPoint snapshotPoint = tempTrackList[0].GetPoint(_view.TextSnapshot);
@@ -342,9 +417,12 @@ namespace SmartNextOcurrence
                 for (int i = 0; i < tempTrackList.Count; i++)
                 {
                     snapshotPoint = tempTrackList[i].GetPoint(_view.TextSnapshot);
+
                     caret.MoveTo(snapshotPoint);
+
                     // Propaga o evento para os demais locais
                     result = _nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
                     AddTrackingPoint(_view.Caret.Position);
                 }
 

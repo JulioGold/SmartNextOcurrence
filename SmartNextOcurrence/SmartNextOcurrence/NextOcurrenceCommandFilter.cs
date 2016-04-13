@@ -43,14 +43,14 @@ namespace SmartNextOcurrence
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
-            if (pguidCmdGroup == typeof(VSConstants.VSStd2KCmdID).GUID || pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
+            if (pguidCmdGroup == typeof(VSConstants.VSStd2KCmdID).GUID)
             {
                 switch (nCmdID)
                 {
                     case ((uint)VSConstants.VSStd2KCmdID.UP):
                     case ((uint)VSConstants.VSStd2KCmdID.DOWN):
 
-                        // Se estava selecionando algo, cancela a seleção.
+                        /* Se estava selecionando algo, cancela a seleção. */
                         if (NextOcurrence.Selecting)
                         {
                             NextOcurrence.CancelSelecting();
@@ -90,6 +90,28 @@ namespace SmartNextOcurrence
 
                         break;
 
+                    /* Seleciona uma letra para a esquerda */
+                    case ((uint)VSConstants.VSStd2KCmdID.LEFT_EXT):
+                        
+                        /* Só executa isso se já estava selecionando algo. */
+                        if (NextOcurrence.Selecting)
+                        {
+                            NextOcurrence.SelectPreviousCharacter();
+                        }
+
+                        break;
+
+                    /* Seleciona uma letra para a direita */
+                    case ((uint)VSConstants.VSStd2KCmdID.RIGHT_EXT):
+
+                        /* Só executa isso se já estava selecionando algo. */
+                        if (NextOcurrence.Selecting)
+                        {
+                            NextOcurrence.SelectNextCharacter();
+                        }
+
+                        break;
+
                     /* Seleciona uma palavra para a esquerda */
                     case ((uint)VSConstants.VSStd2KCmdID.WORDPREV_EXT):
 
@@ -104,16 +126,75 @@ namespace SmartNextOcurrence
 
                         break;
 
-                    case ((uint)VSConstants.VSStd2KCmdID.DELETELINE): /* Ctrl+Shift+L */
+                    /* Ctrl+Shift+L */
+                    case ((uint)VSConstants.VSStd2KCmdID.DELETELINE):
 
                         NextOcurrence.SplitIntoLines();
                         
+                        break;
+
+                    /* Quando tecla Esc cancela as operações */
+                    case ((uint)VSConstants.VSStd2KCmdID.CANCEL):
+
+                        NextOcurrence.CancelarEdicao();
+
                         break;
 
                     default:
                         break;
                 }
             }
+
+            if (pguidCmdGroup == typeof(VSConstants.VSStd97CmdID).GUID)
+            {
+                switch (nCmdID)
+                {
+                    /* Ctrl+D */
+                    case ((uint)VSConstants.VSStd97CmdID.SearchCombo):
+
+                        // Se tem algo selecionado
+                        if (!_textView.Selection.IsEmpty)
+                        {
+                            NextOcurrence.SelectNextOcurrence();
+                        }
+
+                        break;
+
+                    /* Quando tecla Esc cancela as operações */
+                    case ((uint)VSConstants.VSStd97CmdID.Cancel):
+
+                        NextOcurrence.CancelarEdicao();
+
+                        break;
+
+                    /* Ctrl+C */
+                    case ((uint)VSConstants.VSStd97CmdID.Copy):
+
+                        /* Se estava selecionando algo, cancela a seleção. */
+                        if (NextOcurrence.Selecting)
+                        {
+                            return NextOcurrence.SyncedOperation(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                        }
+
+                        break;
+
+                    /* Ctrl+V */
+                    case ((uint)VSConstants.VSStd97CmdID.Paste):
+
+                        /* Se estava selecionando algo, cancela a seleção. */
+                        if (NextOcurrence.Selecting)
+                        {
+                            return NextOcurrence.SyncedOperation(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                        }
+
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            #region Desativado
 
             //if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.LeftShift) && Keyboard.IsKeyDown(Key.Left))
             //{
@@ -141,25 +222,16 @@ namespace SmartNextOcurrence
             //    }
             //}
 
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.D))
-            {
-                // Se tem algo selecionado
-                if (!_textView.Selection.IsEmpty)
-                {
-                    NextOcurrence.SelectNextOcurrence();
-                }
-            }
+            //if (Keyboard.IsKeyDown(Key.LeftCtrl) && Keyboard.IsKeyDown(Key.D))
+            //{
+            //    // Se tem algo selecionado
+            //    if (!_textView.Selection.IsEmpty)
+            //    {
+            //        NextOcurrence.SelectNextOcurrence();
+            //    }
+            //}
 
-            switch (nCmdID)
-            {
-                // Quando tecla Esc cancela as operações
-                case ((uint)VSConstants.VSStd2KCmdID.CANCEL):
-                    NextOcurrence.CancelarEdicao();
-                    break;
-
-                default:
-                    break;
-            }
+            #endregion
 
             return _nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
