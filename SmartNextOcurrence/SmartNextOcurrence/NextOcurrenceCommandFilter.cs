@@ -173,7 +173,10 @@ namespace SmartNextOcurrence
                         /* Se estava selecionando algo, cancela a seleção. */
                         if (NextOcurrence.Selecting)
                         {
-                            return NextOcurrence.SyncedOperation(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                            NextOcurrence.CopySelection();
+
+                            // Stop event to don't propagate action of Copy
+                            return 0;
                         }
 
                         break;

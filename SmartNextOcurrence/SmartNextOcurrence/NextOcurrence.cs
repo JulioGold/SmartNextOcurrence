@@ -370,6 +370,24 @@ namespace SmartNextOcurrence
             }
         }
 
+        internal void CopySelection()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (Tuple<ITrackingPoint, ITrackingPoint> item in _selectedTrackPointList)
+            {
+                int quant = item.Item2.GetPosition(_view.TextSnapshot) - item.Item1.GetPosition(_view.TextSnapshot);
+                sb.Append(_view.TextViewLines.FormattedSpan.GetText().Substring(item.Item1.GetPosition(_view.TextSnapshot), quant));
+            }
+
+            string content = sb.ToString();
+
+            if (!String.IsNullOrEmpty(content))
+            {
+                Clipboard.SetText(content);
+            }
+        }
+
         internal int SyncedOperation(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
             int result = 0;
