@@ -63,11 +63,11 @@ namespace SmartNextOcurrence
 
             SnapshotSpan span = new SnapshotSpan(trackingPoint.GetPoint(_view.TextSnapshot), 1);
 
-            var brush = Brushes.Black;
+            SolidColorBrush brush = Brushes.Black;
 
-            var geom = _view.TextViewLines.GetLineMarkerGeometry(span);
+            Geometry geometry = _view.TextViewLines.GetLineMarkerGeometry(span);
 
-            GeometryDrawing drawing = new GeometryDrawing(brush, null, geom);
+            GeometryDrawing drawing = new GeometryDrawing(brush, null, geometry);
 
             if (drawing.Bounds.IsEmpty)
             {
@@ -83,8 +83,8 @@ namespace SmartNextOcurrence
                 Margin = new System.Windows.Thickness(0, 2, 0, 0),
             };
 
-            Canvas.SetLeft(rectangle, geom.Bounds.Left);
-            Canvas.SetTop(rectangle, geom.Bounds.Top);
+            Canvas.SetLeft(rectangle, geometry.Bounds.Left);
+            Canvas.SetTop(rectangle, geometry.Bounds.Top);
 
             _layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, span, "NextOcurrence", rectangle, null);
         }
@@ -121,16 +121,16 @@ namespace SmartNextOcurrence
         {
             _layer.RemoveAllAdornments();
 
-            // Draw the cursors
-            foreach (ITrackingPoint trackingPoint in _trackPointList)
-            {
-                DrawSinglePoint(trackingPoint);
-            }
-
             // Draw the selections
             foreach (var item in _selectedTrackPointList)
             {
                 DrawSingleSelection(item);
+            }
+
+            // Draw the cursors
+            foreach (ITrackingPoint trackingPoint in _trackPointList)
+            {
+                DrawSinglePoint(trackingPoint);
             }
         }
 
