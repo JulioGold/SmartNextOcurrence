@@ -222,6 +222,8 @@ namespace SmartNextOcurrence
                     }
                 }
 
+                Selecting = true;
+
                 // Diz que está editando
                 Editing = true;
             }

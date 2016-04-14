@@ -49,6 +49,8 @@ namespace SmartNextOcurrence
                 {
                     case ((uint)VSConstants.VSStd2KCmdID.UP):
                     case ((uint)VSConstants.VSStd2KCmdID.DOWN):
+                    case ((uint)VSConstants.VSStd2KCmdID.LEFT):
+                    case ((uint)VSConstants.VSStd2KCmdID.RIGHT):
 
                         /* Se estava selecionando algo, cancela a seleção. */
                         if (NextOcurrence.Selecting)
@@ -68,8 +70,6 @@ namespace SmartNextOcurrence
                     case ((uint)VSConstants.VSStd2KCmdID.DELETEWORDRIGHT):
                     case ((uint)VSConstants.VSStd2KCmdID.DELETEWORDLEFT):
                     case ((uint)VSConstants.VSStd2KCmdID.TAB):
-                    case ((uint)VSConstants.VSStd2KCmdID.LEFT):
-                    case ((uint)VSConstants.VSStd2KCmdID.RIGHT):
                     case ((uint)VSConstants.VSStd2KCmdID.END):
                     case ((uint)VSConstants.VSStd2KCmdID.HOME):
                     case ((uint)VSConstants.VSStd2KCmdID.PAGEDN):
