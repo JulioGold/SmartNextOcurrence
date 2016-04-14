@@ -92,6 +92,7 @@ namespace SmartNextOcurrence
         private void DrawSingleSelection(Tuple<ITrackingPoint, ITrackingPoint> trackingPoint)
         {
             SnapshotSpan span = new SnapshotSpan(_view.TextSnapshot, Span.FromBounds(trackingPoint.Item1.GetPoint(_view.TextSnapshot), trackingPoint.Item2.GetPoint(_view.TextSnapshot)));
+
             Geometry geometry = _view.TextViewLines.GetMarkerGeometry(span);
 
             if (geometry != null)
@@ -137,27 +138,28 @@ namespace SmartNextOcurrence
         {
             string selectedText = _view.Selection.StreamSelectionSpan.GetText();
 
-            // Coloca o cursor na prórpia palavra já selecionada
+            // Coloca o cursor na própria palavra já selecionada
             _lastIndex = (_lastIndex == 0) ? _view.Selection.ActivePoint.Position.Position - selectedText.Length : _lastIndex;
 
-            // Limpa a seleção
-            //_view.Selection.Clear();
-
+            // Expressão para buscar todas as palavras que forem iguais ao texto selecionado
             Regex todoLineRegex = new Regex(selectedText + @"\b");
 
-            var matches = todoLineRegex.Matches(_view.TextViewLines.FormattedSpan.GetText());
+            // Executa a expressão buscando as palavras
+            MatchCollection matches = todoLineRegex.Matches(_view.TextViewLines.FormattedSpan.GetText());
+
+            // Se encontrou algo igual ao selecionado
             if (matches.Count > 0)
             {
-                int ultimaIdx = matches.Count - 1;
+                // Último match que foi encontrado
+                Match ultimoMatch = matches[matches.Count - 1];
 
-                Match ultimaMatch = matches[ultimaIdx];
-
+                // Próximo match depois do último selecionado
                 Match match = todoLineRegex.Match(_view.TextViewLines.FormattedSpan.GetText(), _lastIndex);
 
                 // Se selecionou a próxima e é depois da última
                 if (match.Success && (_trackPointList.Count < matches.Count))
                 {
-                    if (match.Index == ultimaMatch.Index)
+                    if (match.Index == ultimoMatch.Index)
                     {
                         _lastIndex = 1;
                     }
@@ -167,31 +169,24 @@ namespace SmartNextOcurrence
                     }
 
                     SnapshotSpan span = new SnapshotSpan(_view.TextSnapshot, Span.FromBounds(match.Index, match.Index + match.Length));
+
                     Geometry geometry = _view.TextViewLines.GetMarkerGeometry(span);
 
                     if (geometry != null)
                     {
-                        Brush brush;
-
-                        // Create the pen and brush to color the box behind the a's
-                        brush = new SolidColorBrush(Color.FromArgb(0x20, 0x00, 0x00, 0xff));
-
+                        Brush brush = new SolidColorBrush(Color.FromArgb(0x20, 0x00, 0x00, 0xff));
                         brush.Freeze();
 
-                        var penBrush = new SolidColorBrush(Colors.Red);
-
+                        SolidColorBrush penBrush = new SolidColorBrush(Colors.Red);
                         penBrush.Freeze();
 
                         Pen pen = new Pen(penBrush, 0.5);
-
                         pen.Freeze();
 
                         GeometryDrawing drawing = new GeometryDrawing(brush, pen, geometry);
-
                         drawing.Freeze();
 
                         DrawingImage drawingImage = new DrawingImage(drawing);
-
                         drawingImage.Freeze();
 
                         Image image = new Image
@@ -206,7 +201,9 @@ namespace SmartNextOcurrence
                         // Adiciona o adornment, mas ao fazer o RedrawScreen ele é perdido
                         _layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, span, null, image, null);
 
-                        var cursorTrackingPoint = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, match.Index + match.Length), PointTrackingMode.Positive);
+                        // Cria o novo ponto do cursor, neste caso estou colocando ele na frente da palavra, ou seja na direita da palavra
+                        ITrackingPoint cursorTrackingPoint = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, match.Index + match.Length), PointTrackingMode.Positive);
+
                         _trackPointList.Add(cursorTrackingPoint);
 
                         RedrawScreen();
