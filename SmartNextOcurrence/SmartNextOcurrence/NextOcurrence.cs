@@ -134,6 +134,9 @@ namespace SmartNextOcurrence
             }
         }
 
+        /// <summary>
+        /// When hit Ctrl+D
+        /// </summary>
         internal void SelectNextOcurrence()
         {
             string selectedText = _view.Selection.StreamSelectionSpan.GetText();
@@ -205,6 +208,15 @@ namespace SmartNextOcurrence
                         ITrackingPoint cursorTrackingPoint = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, match.Index + match.Length), PointTrackingMode.Positive);
 
                         _trackPointList.Add(cursorTrackingPoint);
+
+                        // Adiciono uma seleção
+                        _selectedTrackPointList.Add(
+                            new Tuple<ITrackingPoint, ITrackingPoint>
+                            (
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, match.Index), PointTrackingMode.Positive),
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, match.Index + match.Length), PointTrackingMode.Positive)
+                            )
+                        );
 
                         RedrawScreen();
                     }
