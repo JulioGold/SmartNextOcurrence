@@ -18,6 +18,60 @@ using Microsoft.VisualStudio;
 
 namespace SmartNextOcurrence
 {
+    public class Selection
+    {
+        private readonly IWpfTextView _view;
+        private readonly Tuple<ITrackingPoint, ITrackingPoint> _selection;
+        private int _start;
+        private int _end;
+        private int _lastPosition;
+
+        public int Start { get { return _start; } }
+
+        public int End { get { return _end; } }
+
+        public Selection(Tuple<ITrackingPoint, ITrackingPoint> selection, IWpfTextView view)
+        {
+            _selection = selection;
+            _view = view;
+            _start = _selection.Item1.GetPosition(_view.TextSnapshot);
+            _end = _selection.Item2.GetPosition(_view.TextSnapshot);
+            _lastPosition = _end;
+        }
+
+        public void Move(int position)
+        {
+            if (_lastPosition > position)
+            {
+                if (position > _start)
+                {
+                    _end = position;
+                }
+                else if (position < _start)
+                {
+                    _start = position;
+                }
+            }
+            else if (_lastPosition < position)
+            {
+                if (position > _start && _end > _lastPosition)
+                {
+                    _start = position;
+                }
+                else if (position > _start)
+                {
+                    _end = position;
+                }
+                else if (position < _start)
+                {
+                    _start = position;
+                }
+            }
+
+            _lastPosition = position;
+        }
+    }
+
     internal sealed class NextOcurrence
     {
         private readonly IOleCommandTarget _nextTarget; // Usado para propagar os eventos nos demais locais onde conter um cursor
@@ -25,6 +79,7 @@ namespace SmartNextOcurrence
         private readonly IWpfTextView _view;
         private List<ITrackingPoint> _trackPointList = new List<ITrackingPoint>();
         private List<Tuple<ITrackingPoint, ITrackingPoint>> _selectedTrackPointList = new List<Tuple<ITrackingPoint, ITrackingPoint>>();
+        private List<Selection> _selectionList = new List<Selection>();
         private int _lastIndex = 0;
 
         public bool Editing { get; set; } = false;
@@ -121,10 +176,21 @@ namespace SmartNextOcurrence
         {
             _layer.RemoveAllAdornments();
 
+            //// Draw the selections
+            //foreach (var item in _selectedTrackPointList)
+            //{
+            //    DrawSingleSelection(item);
+            //}
+
             // Draw the selections
-            foreach (var item in _selectedTrackPointList)
+            foreach (var item in _selectionList)
             {
-                DrawSingleSelection(item);
+                DrawSingleSelection(
+                    new Tuple<ITrackingPoint, ITrackingPoint>
+                    (
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, item.Start), PointTrackingMode.Positive),
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, item.End), PointTrackingMode.Positive)
+                    ));
             }
 
             // Draw the cursors
@@ -241,6 +307,14 @@ namespace SmartNextOcurrence
                             )
                         );
 
+                        _selectionList.Add(new Selection(
+                            new Tuple<ITrackingPoint, ITrackingPoint>
+                            (
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, match.Index), PointTrackingMode.Positive),
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, match.Index + match.Length), PointTrackingMode.Positive)
+                            ),
+                            _view));
+
                         RedrawScreen();
                     }
                 }
@@ -263,23 +337,28 @@ namespace SmartNextOcurrence
             {
                 ITrackingPoint cursorPos = _trackPointList[i];
 
-                int start = (cursorPos.GetPosition(_view.TextSnapshot) == 0) ? 0 : (cursorPos.GetPosition(_view.TextSnapshot) - 1);
-                int end = cursorPos.GetPosition(_view.TextSnapshot);
+                int newCursorPosition = (_trackPointList[i].GetPosition(_view.TextSnapshot) == 0) ? 0 : (_trackPointList[i].GetPosition(_view.TextSnapshot) - 1);
+
+                _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
 
                 // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
                 Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
+
+                int start = cursorPos.GetPosition(_view.TextSnapshot) < selectedItem.Item1.GetPosition(_view.TextSnapshot) ? ((cursorPos.GetPosition(_view.TextSnapshot) == 0) ? 0 : (cursorPos.GetPosition(_view.TextSnapshot))) : selectedItem.Item1.GetPosition(_view.TextSnapshot);
+                int end = cursorPos.GetPosition(_view.TextSnapshot) > selectedItem.Item1.GetPosition(_view.TextSnapshot) ? cursorPos.GetPosition(_view.TextSnapshot) - 1 : cursorPos.GetPosition(_view.TextSnapshot) + 1;
+
+                //int start = (cursorPos.GetPosition(_view.TextSnapshot) == 0) ? 0 : (cursorPos.GetPosition(_view.TextSnapshot) - 1);
+                //int end = cursorPos.GetPosition(_view.TextSnapshot);
 
                 // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
                 _selectedTrackPointList[i] =
                     new Tuple<ITrackingPoint, ITrackingPoint>
                     (
                         _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, start), PointTrackingMode.Positive),
-                        selectedItem.Item2
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, end), PointTrackingMode.Positive)
                     );
 
-                int newCursorPosition = (_trackPointList[i].GetPosition(_view.TextSnapshot) == 0) ? 0 : (_trackPointList[i].GetPosition(_view.TextSnapshot) - 1);
-
-                _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
+                _selectionList[i].Move(newCursorPosition);
             }
 
             Selecting = true;
@@ -319,6 +398,8 @@ namespace SmartNextOcurrence
                 int newCursorPosition = ((cursorPos.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (cursorPos.GetPosition(_view.TextSnapshot) + 1);
 
                 _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
+
+                _selectionList[i].Move(newCursorPosition);
             }
 
             Selecting = true;
@@ -373,6 +454,8 @@ namespace SmartNextOcurrence
                         _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, startPosition), PointTrackingMode.Positive),
                         _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, endPosition), PointTrackingMode.Positive)
                     );
+
+                _selectionList[i].Move(newCursorPosition);
             }
 
             Selecting = true;
@@ -428,6 +511,8 @@ namespace SmartNextOcurrence
                         _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, startPosition), PointTrackingMode.Positive),
                         _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, endPosition), PointTrackingMode.Positive)
                     );
+
+                _selectionList[i].Move(newCursorPosition);
             }
 
             Selecting = true;
@@ -573,6 +658,7 @@ namespace SmartNextOcurrence
         {
             Selecting = false;
             _selectedTrackPointList.Clear();
+            _selectionList.Clear();
             _view.Caret.IsHidden = false;
             _view.Selection.IsActive = true;
             //_layer.RemoveMatchingAdornments();
