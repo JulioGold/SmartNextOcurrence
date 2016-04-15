@@ -93,22 +93,14 @@ namespace SmartNextOcurrence
                     /* Seleciona uma letra para a esquerda */
                     case ((uint)VSConstants.VSStd2KCmdID.LEFT_EXT):
                         
-                        /* Só executa isso se já estava selecionando algo. */
-                        if (NextOcurrence.Selecting)
-                        {
-                            NextOcurrence.SelectPreviousCharacter();
-                        }
+                        NextOcurrence.SelectPreviousCharacter();
 
                         break;
 
                     /* Seleciona uma letra para a direita */
                     case ((uint)VSConstants.VSStd2KCmdID.RIGHT_EXT):
 
-                        /* Só executa isso se já estava selecionando algo. */
-                        if (NextOcurrence.Selecting)
-                        {
-                            NextOcurrence.SelectNextCharacter();
-                        }
+                        NextOcurrence.SelectNextCharacter();
 
                         break;
 

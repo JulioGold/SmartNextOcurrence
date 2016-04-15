@@ -272,7 +272,17 @@ namespace SmartNextOcurrence
 
                 _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
 
-                if (_selectionList.Count > 0)
+                if (_selectionList.Count < _trackPointList.Count)
+                {
+                    _selectionList.Add(new TextSelection(
+                            new Tuple<ITrackingPoint, ITrackingPoint>
+                            (
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive),
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, cursorPos.GetPosition(_view.TextSnapshot)), PointTrackingMode.Positive)
+                            ),
+                            _view));
+                }
+                else
                 {
                     _selectionList[i].Move(newCursorPosition);
                 }
@@ -302,8 +312,18 @@ namespace SmartNextOcurrence
                 int newCursorPosition = ((cursorPos.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (cursorPos.GetPosition(_view.TextSnapshot) + 1);
 
                 _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
-
-                if (_selectionList.Count > 0)
+                
+                if (_selectionList.Count < _trackPointList.Count)
+                {
+                    _selectionList.Add(new TextSelection(
+                            new Tuple<ITrackingPoint, ITrackingPoint>
+                            (
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, cursorPos.GetPosition(_view.TextSnapshot)), PointTrackingMode.Positive),
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive)
+                            ),
+                            _view));
+                }
+                else
                 {
                     _selectionList[i].Move(newCursorPosition);
                 }
@@ -334,7 +354,17 @@ namespace SmartNextOcurrence
 
                 _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
 
-                if (_selectionList.Count > 0)
+                if (_selectionList.Count < _trackPointList.Count)
+                {
+                    _selectionList.Add(new TextSelection(
+                            new Tuple<ITrackingPoint, ITrackingPoint>
+                            (
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, previousWord.Start), PointTrackingMode.Positive),
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, previousWord.End), PointTrackingMode.Positive)
+                            ),
+                            _view));
+                }
+                else
                 {
                     _selectionList[i].Move(newCursorPosition);
                 }
@@ -366,7 +396,17 @@ namespace SmartNextOcurrence
 
                 _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
 
-                if (_selectionList.Count > 0)
+                if (_selectionList.Count < _trackPointList.Count)
+                {
+                    _selectionList.Add(new TextSelection(
+                            new Tuple<ITrackingPoint, ITrackingPoint>
+                            (
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, nextWord.Start), PointTrackingMode.Positive),
+                                _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, nextWord.End), PointTrackingMode.Positive)
+                            ),
+                            _view));
+                }
+                else
                 {
                     _selectionList[i].Move(newCursorPosition);
                 }
