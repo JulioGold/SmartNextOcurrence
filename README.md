@@ -23,7 +23,9 @@ This extension needs some improvements, feel free to contribute and help to take
 - 1.1    
     - Selection improvement.
     - Added copy selection.
-
+- 1.2
+    - Improve text selection.
+  
 OBS.:: To run extension to debug, you need to configure the project  
 On **Project Properties** at **Debug** tab, check the option **Start external program** and set to your *devenv.exe* like that:
 ```
