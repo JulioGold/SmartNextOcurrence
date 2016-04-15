@@ -113,7 +113,7 @@ namespace SmartNextOcurrence
                 Canvas.SetTop(image, geometry.Bounds.Top);
 
                 // Adiciona o adornment, mas ao fazer o RedrawScreen ele é perdido
-                _layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, span, null, image, null);
+                _layer.AddAdornment(AdornmentPositioningBehavior.TextRelative, span, "NextOcurrence", image, null);
             }
         }
 
@@ -139,10 +139,33 @@ namespace SmartNextOcurrence
         /// </summary>
         internal void SelectNextOcurrence()
         {
-            string selectedText = _view.Selection.StreamSelectionSpan.GetText();
+            string selectedText;
+            
+            // Se já tem algo selecionado
+            if (_selectedTrackPointList.Count <= 0 && !_view.Selection.IsEmpty)
+            {
+                selectedText = _view.Selection.StreamSelectionSpan.GetText();
 
-            // Coloca o cursor na própria palavra já selecionada
-            _lastIndex = (_lastIndex == 0) ? _view.Selection.ActivePoint.Position.Position - selectedText.Length : _lastIndex;
+                // Coloca o cursor na própria palavra já selecionada
+                _lastIndex = (_lastIndex == 0) ? _view.Selection.ActivePoint.Position.Position - selectedText.Length : _lastIndex;
+            }
+            else if (_selectedTrackPointList.Count > 0)
+            {
+                var itemSelecionado = _selectedTrackPointList[0];
+                selectedText = _view.TextViewLines.FormattedSpan.GetText().Substring(itemSelecionado.Item1.GetPosition(_view.TextSnapshot), itemSelecionado.Item2.GetPosition(_view.TextSnapshot) - itemSelecionado.Item1.GetPosition(_view.TextSnapshot));
+
+                // Coloca o cursor na própria palavra já selecionada
+                _lastIndex = (_lastIndex == 0) ? itemSelecionado.Item2.GetPosition(_view.TextSnapshot) - selectedText.Length : _lastIndex;
+            }
+            else
+            {
+                // Se não tinha nada selecionado então retorno pois agora o filtro é este, o comando sempre vem para cá
+                return;
+            }
+
+            _view.Selection.IsActive = false;
+            _view.Selection.Clear();
+            _view.Caret.IsHidden = true;
 
             // Expressão para buscar todas as palavras que forem iguais ao texto selecionado
             Regex todoLineRegex = new Regex(selectedText + @"\b");
@@ -231,42 +254,28 @@ namespace SmartNextOcurrence
 
         internal void SelectPreviousCharacter()
         {
-            _view.Selection.Clear();
+            _view.Selection.IsActive = false;
             _view.Caret.IsHidden = true;
+            _view.Selection.Clear();
 
             // Faz com que o "cursor" vá para o início da palavra, pois aqui é SelectPreviousWord, ou seja a palavra anterior
             for (int i = 0; i < _trackPointList.Count; i++)
             {
-                ITrackingPoint item = _trackPointList[i];
+                ITrackingPoint cursorPos = _trackPointList[i];
 
-                int start = (item.GetPosition(_view.TextSnapshot) == 0) ? 0 : (item.GetPosition(_view.TextSnapshot) - 1);
-                int end = item.GetPosition(_view.TextSnapshot);
+                int start = (cursorPos.GetPosition(_view.TextSnapshot) == 0) ? 0 : (cursorPos.GetPosition(_view.TextSnapshot) - 1);
+                int end = cursorPos.GetPosition(_view.TextSnapshot);
 
-                // Se o tamanho da minha lista de seleção é menor que a lista de trackingpoint quer dizer que esta é a primeira ver e que não tinha nada selecionado ainda
-                if (_selectedTrackPointList.Count < _trackPointList.Count)
-                {
-                    // Adiciono uma seleção
-                    _selectedTrackPointList.Add(
-                        new Tuple<ITrackingPoint, ITrackingPoint>
-                        (
-                            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, start), PointTrackingMode.Positive),
-                            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, end), PointTrackingMode.Positive)
-                        )
+                // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
+                Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
+
+                // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
+                _selectedTrackPointList[i] =
+                    new Tuple<ITrackingPoint, ITrackingPoint>
+                    (
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, start), PointTrackingMode.Positive),
+                        selectedItem.Item2
                     );
-                }
-                else // Se já tem algo selecionado
-                {
-                    // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
-                    Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
-
-                    // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
-                    _selectedTrackPointList[i] =
-                        new Tuple<ITrackingPoint, ITrackingPoint>
-                        (
-                            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, start), PointTrackingMode.Positive),
-                            selectedItem.Item2
-                        );
-                }
 
                 int newCursorPosition = (_trackPointList[i].GetPosition(_view.TextSnapshot) == 0) ? 0 : (_trackPointList[i].GetPosition(_view.TextSnapshot) - 1);
 
@@ -283,47 +292,31 @@ namespace SmartNextOcurrence
 
         internal void SelectNextCharacter()
         {
-            // TODO: Implement the behavior here
-
-            _view.Selection.Clear();
+            _view.Selection.IsActive = false;
             _view.Caret.IsHidden = true;
+            _view.Selection.Clear();
 
             //// Faz com que o "cursor" vá para o início da palavra, pois aqui é SelectPreviousWord, ou seja a palavra anterior
             for (int i = 0; i < _trackPointList.Count; i++)
             {
-                ITrackingPoint item = _trackPointList[i];
+                ITrackingPoint cursorPos = _trackPointList[i];
 
                 int textLength = _view.TextViewLines.FormattedSpan.GetText().Length;
-                int start = item.GetPosition(_view.TextSnapshot); 
-                int end = ((item.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (item.GetPosition(_view.TextSnapshot) + 1);
+                int start = cursorPos.GetPosition(_view.TextSnapshot); 
+                int end = ((cursorPos.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (cursorPos.GetPosition(_view.TextSnapshot) + 1);
 
-                // Se o tamanho da minha lista de seleção é menor que a lista de trackingpoint quer dizer que esta é a primeira ver e que não tinha nada selecionado ainda
-                if (_selectedTrackPointList.Count < _trackPointList.Count)
-                {
-                    // Adiciono uma seleção
-                    _selectedTrackPointList.Add(
-                        new Tuple<ITrackingPoint, ITrackingPoint>
-                        (
-                            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, start), PointTrackingMode.Positive),
-                            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, end), PointTrackingMode.Positive)
-                        )
+                // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
+                Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
+
+                // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
+                _selectedTrackPointList[i] =
+                    new Tuple<ITrackingPoint, ITrackingPoint>
+                    (
+                        selectedItem.Item1,
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, end), PointTrackingMode.Positive)
                     );
-                }
-                else // Se já tem algo selecionado
-                {
-                    // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
-                    Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
-
-                    // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
-                    _selectedTrackPointList[i] =
-                        new Tuple<ITrackingPoint, ITrackingPoint>
-                        (
-                            selectedItem.Item1,
-                            _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, end), PointTrackingMode.Positive)
-                        );
-                }
-
-                int newCursorPosition = ((item.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (item.GetPosition(_view.TextSnapshot) + 1);
+                
+                int newCursorPosition = ((cursorPos.GetPosition(_view.TextSnapshot) + 1) > textLength) ? textLength : (cursorPos.GetPosition(_view.TextSnapshot) + 1);
 
                 _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
             }
@@ -338,21 +331,40 @@ namespace SmartNextOcurrence
 
         internal void SelectPreviousWord()
         {
-            _view.Selection.Clear();
+            _view.Selection.IsActive = false;
             _view.Caret.IsHidden = true;
+            _view.Selection.Clear();
 
             // Faz com que o "cursor" vá para o início da palavra, pois aqui é SelectPreviousWord, ou seja a palavra anterior
             for (int i = 0; i < _trackPointList.Count; i++)
             {
-                ITrackingPoint item = _trackPointList[i];
+                ITrackingPoint cursorPos = _trackPointList[i];
 
-                WordPosition previousWord = WordPosition.PreviousWord(_view.TextViewLines.FormattedSpan.GetText(), item.GetPosition(_view.TextSnapshot));
+                WordPosition previousWord = WordPosition.PreviousWord(_view.TextViewLines.FormattedSpan.GetText(), cursorPos.GetPosition(_view.TextSnapshot));
+
+                int newCursorPosition = ((_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) >= 0) && (previousWord.Word.Length > 0) ? (_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) : 0;
+
+                _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
 
                 // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
                 Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
 
-                int startPosition = previousWord.Start < selectedItem.Item1.GetPosition(_view.TextSnapshot) ? previousWord.Start : selectedItem.Item1.GetPosition(_view.TextSnapshot);
-                int endPosition = previousWord.End < selectedItem.Item2.GetPosition(_view.TextSnapshot) ? previousWord.End : selectedItem.Item2.GetPosition(_view.TextSnapshot);
+                bool comecoSelecao = cursorPos.GetPosition(_view.TextSnapshot) == selectedItem.Item1.GetPosition(_view.TextSnapshot);
+                bool finalSelecao = cursorPos.GetPosition(_view.TextSnapshot) == selectedItem.Item2.GetPosition(_view.TextSnapshot);
+
+                int startPosition;
+                int endPosition;
+
+                if (finalSelecao)
+                {
+                    startPosition = previousWord.Start < selectedItem.Item1.GetPosition(_view.TextSnapshot) ? previousWord.Start : selectedItem.Item1.GetPosition(_view.TextSnapshot);
+                    endPosition = previousWord.End == selectedItem.Item2.GetPosition(_view.TextSnapshot) ? newCursorPosition < selectedItem.Item1.GetPosition(_view.TextSnapshot) ? selectedItem.Item1.GetPosition(_view.TextSnapshot) : newCursorPosition : selectedItem.Item1.GetPosition(_view.TextSnapshot);
+                }
+                else
+                {
+                    startPosition = previousWord.Start < selectedItem.Item1.GetPosition(_view.TextSnapshot) ? previousWord.Start : selectedItem.Item1.GetPosition(_view.TextSnapshot);
+                    endPosition = selectedItem.Item2.GetPosition(_view.TextSnapshot);
+                }
 
                 // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
                 _selectedTrackPointList[i] =
@@ -361,10 +373,6 @@ namespace SmartNextOcurrence
                         _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, startPosition), PointTrackingMode.Positive),
                         _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, endPosition), PointTrackingMode.Positive)
                     );
-
-                int newCursorPosition = ((_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) >= 0) && (previousWord.Word.Length > 0) ? (_trackPointList[i].GetPosition(_view.TextSnapshot) - previousWord.Word.Length) : 0;
-
-                _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
             }
 
             Selecting = true;
@@ -383,31 +391,43 @@ namespace SmartNextOcurrence
             // Faz com que o "cursor" vá para o final da palavra, pois aqui é SelectNextWord, ou seja a próxima palavra
             for (int i = 0; i < _trackPointList.Count; i++)
             {
-                ITrackingPoint item = _trackPointList[i];
+                ITrackingPoint cursorPos = _trackPointList[i];
 
-                WordPosition nextWord = WordPosition.NextWord(_view.TextViewLines.FormattedSpan.GetText(), item.GetPosition(_view.TextSnapshot));
-
-                // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
-                Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
-
-                int startPosition = nextWord.End < selectedItem.Item2.GetPosition(_view.TextSnapshot) ? nextWord.End : selectedItem.Item1.GetPosition(_view.TextSnapshot);
-                int endPosition = nextWord.End > selectedItem.Item2.GetPosition(_view.TextSnapshot) ? nextWord.End : selectedItem.Item2.GetPosition(_view.TextSnapshot);
-
-                // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
-                _selectedTrackPointList[i] =
-                    new Tuple<ITrackingPoint, ITrackingPoint>
-                    (
-                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, startPosition), PointTrackingMode.Positive),
-                        //selectedItem.Item1,
-                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, endPosition), PointTrackingMode.Positive)
-                    //_view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, nextWord.End), PointTrackingMode.Positive)
-                    );
+                WordPosition nextWord = WordPosition.NextWord(_view.TextViewLines.FormattedSpan.GetText(), cursorPos.GetPosition(_view.TextSnapshot));
 
                 int newCursorPosition = ((_trackPointList[i].GetPosition(_view.TextSnapshot) + nextWord.Word.Length) < _view.TextViewLines.FormattedSpan.GetText().Length) && (nextWord.Word.Length > 0) ?
                     (_trackPointList[i].GetPosition(_view.TextSnapshot) + nextWord.Word.Length) :
                     _view.TextViewLines.FormattedSpan.GetText().Length - 1;
 
                 _trackPointList[i] = _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, newCursorPosition), PointTrackingMode.Positive);
+
+                // Pega o item da seleção mas este item tem o mesmo índice do item de tracking point
+                Tuple<ITrackingPoint, ITrackingPoint> selectedItem = _selectedTrackPointList[i];
+
+                bool comecoSelecao = cursorPos.GetPosition(_view.TextSnapshot) == selectedItem.Item1.GetPosition(_view.TextSnapshot);
+                bool finalSelecao = cursorPos.GetPosition(_view.TextSnapshot) == selectedItem.Item2.GetPosition(_view.TextSnapshot);
+
+                int startPosition;
+                int endPosition;
+
+                if (finalSelecao)
+                {
+                    startPosition = nextWord.Start < selectedItem.Item1.GetPosition(_view.TextSnapshot) ? nextWord.Start : selectedItem.Item1.GetPosition(_view.TextSnapshot);
+                    endPosition = newCursorPosition;
+                }
+                else
+                {
+                    startPosition = newCursorPosition;
+                    endPosition = newCursorPosition >= selectedItem.Item2.GetPosition(_view.TextSnapshot) ? newCursorPosition : selectedItem.Item2.GetPosition(_view.TextSnapshot);
+                }
+                
+                // Crio uma tupla mas atualizo apenas o início da seleção, o final da seleção permanece o mesmo
+                _selectedTrackPointList[i] =
+                    new Tuple<ITrackingPoint, ITrackingPoint>
+                    (
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, startPosition), PointTrackingMode.Positive),
+                        _view.TextSnapshot.CreateTrackingPoint(new SnapshotPoint(_view.TextSnapshot, endPosition), PointTrackingMode.Positive)
+                    );
             }
 
             Selecting = true;
@@ -554,6 +574,7 @@ namespace SmartNextOcurrence
             Selecting = false;
             _selectedTrackPointList.Clear();
             _view.Caret.IsHidden = false;
+            _view.Selection.IsActive = true;
             //_layer.RemoveMatchingAdornments();
             RedrawScreen();
         }

@@ -152,11 +152,7 @@ namespace SmartNextOcurrence
                     /* Ctrl+D */
                     case ((uint)VSConstants.VSStd97CmdID.SearchCombo):
 
-                        // Se tem algo selecionado
-                        if (!_textView.Selection.IsEmpty)
-                        {
-                            NextOcurrence.SelectNextOcurrence();
-                        }
+                        NextOcurrence.SelectNextOcurrence();
 
                         break;
 
