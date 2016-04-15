@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SmartNextOcurrence
 {
-    public class WordPosition
+    internal class WordPosition
     {
         public string Word { get; set; }
 
