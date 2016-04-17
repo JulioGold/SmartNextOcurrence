@@ -1,6 +1,6 @@
 # SmartNextOcurrence
 
-I decided to create this, to turn development easier and optimized like tools wich exists on another tools, like a vscode.
+I decided to create this, to turn development easier and optimized like tools wich exists on another tools, like a [vscode](https://code.visualstudio.com/).
 
 This extension allow to put an caret/cursor on next ocurrence of an selected word in Visual Studio.
 
