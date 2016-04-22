@@ -141,6 +141,16 @@ namespace SmartNextOcurrence
             {
                 switch (nCmdID)
                 {
+                    /* When hit DELETE key */
+                    case ((uint)VSConstants.VSStd97CmdID.Delete):
+
+                        if (NextOcurrence.Editing)
+                        {
+                            return NextOcurrence.SyncedOperation(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                        }
+
+                        break;
+
                     /* Ctrl+D */
                     case ((uint)VSConstants.VSStd97CmdID.SearchCombo):
 
