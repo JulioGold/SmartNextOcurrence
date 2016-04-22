@@ -8,23 +8,32 @@ With **Ctrl+D** hotkeys you can create a new cursor on next ocurrence of the sam
 
 Look those imagens to see how it works ;D  
   
+### **Ctrl + D** how it works  
 ![C#](./assets/csharp.gif)  
   
+### **Ctrl + D** how it works  
 ![Text](./assets/text.gif)  
+  
+### **Alt + Left Click** how it works  
+![Click](./assets/Click.gif)    
   
 This extension needs some improvements, feel free to contribute and help to take it better.  
 
 ## Changelog
 - 1.0
-    - Project start
-    - Ctrl+D feature
-    - Selection feature
+    - Project start.
+    - Ctrl+D feature.
+    - Selection feature.
 
 - 1.1    
     - Selection improvement.
     - Added copy selection.
+    
 - 1.2
     - Improve text selection.
+    
+- 1.3
+    - **Alt + Left Click** feature.
   
 OBS.:: To run extension to debug, you need to configure the project  
 On **Project Properties** at **Debug** tab, check the option **Start external program** and set to your *devenv.exe* like that:
