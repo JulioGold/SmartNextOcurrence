@@ -25,7 +25,7 @@ namespace SmartNextOcurrence
 
             if (commandFilter != null)
             {
-                commandFilter.HandleClick();
+                commandFilter.HandleClick(Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt));
             }
         }
 

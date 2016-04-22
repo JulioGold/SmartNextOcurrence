@@ -566,5 +566,48 @@ namespace SmartNextOcurrence
         {
             // TODO: Get selected lines, hide selection and create an cursor/caret/trackpoint at the end of line
         }
+
+        internal void HandleClick()
+        {
+            AddTrackingPoint(_view.Caret.Position);
+
+            // Diz que está editando
+            Editing = true;
+
+            RedrawScreen();
+
+            /*
+            if (addCursor && _view.Selection.SelectedSpans.All(span => span.Length == 0))
+            {
+                if (_view.Selection.SelectedSpans.Count == 1)
+                {
+                    if (m_trackList.Count == 0)
+                    {
+                        AddSyncPoint(lastCaretPosition);
+                    }
+
+                    AddSyncPoint(_view.Caret.Position);
+                    RedrawScreen();
+                }
+                else
+                {
+                    foreach (var span in _view.Selection.SelectedSpans)
+                    {
+                        AddSyncPoint(span.Start.Position);
+                    }
+
+                    _view.Selection.Clear();
+                    RedrawScreen();
+                }
+            }
+            else if (m_trackList.Any())
+            {
+                ClearSyncPoints();
+                RedrawScreen();
+            }
+
+            lastCaretPosition = _view.Caret.Position;
+            */
+        }
     }
 }

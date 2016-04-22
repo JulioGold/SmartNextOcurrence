@@ -232,10 +232,17 @@ namespace SmartNextOcurrence
             return _nextTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
-        public void HandleClick()
+        public void HandleClick(bool addCursor)
         {
-            NextOcurrence.CancelSelecting();
-            NextOcurrence.CancelarEdicao();
+            if (addCursor)
+            {
+                NextOcurrence.HandleClick();
+            }
+            else
+            {
+                NextOcurrence.CancelSelecting();
+                NextOcurrence.CancelarEdicao();
+            }
         }
     }
 }
